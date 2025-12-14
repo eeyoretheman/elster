@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELSTER</title>
+
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <header id="header">ELSTER</header>
+
+  <main id="main">
+    <form id="configuration">
+      <label for="axiom">Axiom:</label>
+      <input id="axiom" size="20" type="text" value="F--F--F">
+
+      <label for="rules">Rules:</label>
+      <textarea id="rules" cols="20">F = F+F--F+F</textarea>
+
+      <label for="generations">Generations:</label>
+      <input id="generations" type="number" value="5">
+
+      <label for="angle">Angle:</label>
+      <input id="angle" type="number" value="60.0">
+
+      <button type="button" onclick="plot()">Plot</button>
+
+      <output id="output" for="axiom rules generations"></output>
+    </form>
+
+    <canvas id="plot" width="800" height="600"></canvas>
+  </main>
+
+  <footer id="footer">
+    <a href="https://github.com/eeyoretheman/elster">
+      <img src="images/github.png">
+    </a>
+  </footer>
+
+  <script src="index.js"></script>
+</body>
+</html>
