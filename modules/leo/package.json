@@ -1,0 +1,15 @@
+{
+  "name": "leo",
+  "version": "1.0.0",
+  "description": "A simple Turtle Module for the ELSTER plotter.",
+  "license": "ISC",
+  "author": "Yordan Todorov",
+  "type": "commonjs",
+  "main": "main.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "assemblyscript": "^0.28.9"
+  }
+}
