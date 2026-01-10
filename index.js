@@ -5,12 +5,36 @@ function plot() {
   let angle = document.getElementById("angle").value * (Math.PI / 180);
   let output = document.getElementById("output");
 
+  document.getElementById("turtleModule").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    console.log(file)
+    if (!file) return;
+
+    // Read as ArrayBuffer
+    const bytes = await file.arrayBuffer();
+
+    // Instantiate WebAssembly
+    const { instance, module } = await WebAssembly.instantiate(bytes, {
+      /* imports go here */
+    });
+
+    // Example call
+    console.log(instance.exports);
+  });
+
+  axiom = axiom.trim().replace(/\s+/g, " ").split(" ");
+
   let rule_map = {};
 
   rules.split("\n").forEach(line => {
     let pair = line.split("=");
     symbol = pair[0].trim();
-    definition = pair[1].trim();
+
+    if (symbol.includes(" ")) {
+      alert("Symbol names cannot contain spaces. Symbol sequence expansion mar or may not be implemented someday.")
+    }
+
+    definition = pair[1].trim().replace(/\s+/g, " ").split(" ");
 
     rule_map[symbol] = definition;
   });
@@ -18,28 +42,24 @@ function plot() {
   let current_generation = axiom;
 
   for (let generation = 0; generation < generations; generation++) {
-    let new_generation = "";
+    let new_generation = [];
 
     for (let i = 0; i < current_generation.length; i++) {
-      new_generation += rule_map[current_generation[i]] ?? current_generation[i];
+      new_generation.push(...rule_map[current_generation[i]] ?? current_generation[i]);
     }
 
     current_generation = new_generation;
   }
-
-  // output.value = current_generation;
 
   let step = 1;
 
   let points = [[0, 0]];
   let direction = 0;
 
-  // switch to space-delimited words instead
-
   for (let i = 0; i < current_generation.length; i++) {
-    let character = current_generation[i];
+    let symbol = current_generation[i];
 
-    switch (character) {
+    switch (symbol) {
       case "F":
         previous_point = points[points.length - 1];
         new_point = [
@@ -57,8 +77,6 @@ function plot() {
         break;
     }
   }
-
-  console.log(points)
 
   // Calculate bounds
   let minX = Infinity, minY = Infinity;
