@@ -5,22 +5,22 @@ function plot() {
   let angle = document.getElementById("angle").value * (Math.PI / 180);
   let output = document.getElementById("output");
 
-  document.getElementById("turtleModule").addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    console.log(file)
-    if (!file) return;
+  // document.getElementById("turtleModule").addEventListener("change", async (e) => {
+  //   const file = e.target.files[0];
+  //   console.log(file)
+  //   if (!file) return;
 
-    // Read as ArrayBuffer
-    const bytes = await file.arrayBuffer();
+  //   // Read as ArrayBuffer
+  //   const bytes = await file.arrayBuffer();
 
-    // Instantiate WebAssembly
-    const { instance, module } = await WebAssembly.instantiate(bytes, {
-      /* imports go here */
-    });
+  //   // Instantiate WebAssembly
+  //   const { instance, module } = await WebAssembly.instantiate(bytes, {
+  //     /* imports go here */
+  //   });
 
-    // Example call
-    console.log(instance.exports);
-  });
+  //   // Example call
+  //   console.log(instance.exports);
+  // });
 
   axiom = axiom.trim().replace(/\s+/g, " ").split(" ");
 
