@@ -1,135 +1,206 @@
-function plot() {
-  let axiom = document.getElementById("axiom").value;
-  let rules = document.getElementById("rules").value;
-  let generations = document.getElementById("generations").value;
-  let angle = document.getElementById("angle").value * (Math.PI / 180);
-  let output = document.getElementById("output");
-
-  // document.getElementById("turtleModule").addEventListener("change", async (e) => {
-  //   const file = e.target.files[0];
-  //   console.log(file)
-  //   if (!file) return;
-
-  //   // Read as ArrayBuffer
-  //   const bytes = await file.arrayBuffer();
-
-  //   // Instantiate WebAssembly
-  //   const { instance, module } = await WebAssembly.instantiate(bytes, {
-  //     /* imports go here */
-  //   });
-
-  //   // Example call
-  //   console.log(instance.exports);
-  // });
-
-  axiom = axiom.trim().replace(/\s+/g, " ").split(" ");
-
-  let rule_map = {};
-
-  rules.split("\n").forEach(line => {
-    let pair = line.split("=");
-    symbol = pair[0].trim();
-
-    if (symbol.includes(" ")) {
-      alert("Symbol names cannot contain spaces. Symbol sequence expansion mar or may not be implemented someday.")
-    }
-
-    definition = pair[1].trim().replace(/\s+/g, " ").split(" ");
-
-    rule_map[symbol] = definition;
-  });
-
-  let current_generation = axiom;
-
-  for (let generation = 0; generation < generations; generation++) {
-    let new_generation = [];
-
-    for (let i = 0; i < current_generation.length; i++) {
-      new_generation.push(...rule_map[current_generation[i]] ?? current_generation[i]);
-    }
-
-    current_generation = new_generation;
-  }
-
-  let step = 1;
-
-  let points = [[0, 0]];
-  let direction = 0;
-
-  for (let i = 0; i < current_generation.length; i++) {
-    let symbol = current_generation[i];
-
+/* Turtle Module */
+function forth(symbol, stack, cursor) {
     switch (symbol) {
-      case "F":
-        previous_point = points[points.length - 1];
-        new_point = [
-          previous_point[0] + step * Math.cos(direction),
-          previous_point[1] + step * Math.sin(direction)
-        ]
-
-        points.push(new_point)
-        break;
-      case "+":
-        direction += angle;
-        break;
-      case "-":
-        direction -= angle;
-        break;
+        case "FORWARD":
+            const x1 = cursor.x_position;
+            const y1 = cursor.y_position;
+            let steps = Number(stack.pop());
+            cursor.x_position += Math.cos(cursor.direction) * steps;
+            cursor.y_position += Math.sin(cursor.direction) * steps;
+            const x2 = cursor.x_position;
+            const y2 = cursor.y_position;
+            return {
+                x1,
+                y1,
+                x2,
+                y2,
+                thickness: 1,
+                color: [0, 0, 0, 1]
+            };
+        case "ROTATE":
+            let angle = Number(stack.pop());
+            cursor.direction += angle * Math.PI / 180;
+            return;
+        default:
+            stack.push(symbol);
     }
-  }
-
-  // Calculate bounds
-  let minX = Infinity, minY = Infinity;
-  let maxX = -Infinity, maxY = -Infinity;
-  points.forEach(([x, y]) => {
-    minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x);
-    maxY = Math.max(maxY, y);
-  });
-
-  let shapeWidth = maxX - minX;
-  let shapeHeight = maxY - minY;
-
-  let canvas = document.getElementById("plot");
-  let context = canvas.getContext("2d");
-
-  let container = canvas.parentElement;
-
-  // Set canvas internal resolution to match display size
-  canvas.width = container.clientWidth;
-  canvas.height = container.clientHeight;
-
-
-  console.log(canvas.width)
-
-  // Calculate scale to fit with padding
-  let padding = 20;
-  let scaleX = (canvas.width - 2 * padding) / shapeWidth;
-  let scaleY = (canvas.height - 2 * padding) / shapeHeight;
-  let scale = Math.min(scaleX, scaleY); // Use the smaller scale to fit both dimensions
-
-  // Center the scaled shape
-  let scaledWidth = shapeWidth * scale;
-  let scaledHeight = shapeHeight * scale;
-  let offsetX = (canvas.width - scaledWidth) / 2 - minX * scale;
-  let offsetY = (canvas.height - scaledHeight) / 2 - minY * scale;
-
-  context.fillStyle="#f4f4f4";
-  context.strokeStyle="#1a1c2c "
-
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  context.beginPath();
-  context.moveTo(
-    points[0][0] * scale + offsetX,
-    canvas.height - (points[0][1] * scale + offsetY)
-  );
-  for (let i = 1; i < points.length; i++) {
-    context.lineTo(
-      points[i][0] * scale + offsetX,
-      canvas.height - (points[i][1] * scale + offsetY)
-    );
-  }
-  context.stroke();
 }
+function drawLine(gl, line) {
+    const dx = line.x2 - line.x1;
+    const dy = line.y2 - line.y1;
+    const length = Math.hypot(dx, dy);
+    if (length === 0) {
+        return;
+    }
+    /* Perpendicular Vector */
+    const nx = -dy / length;
+    const ny = dx / length;
+    const h = line.thickness / 2;
+    const vertices = new Float32Array([
+        line.x1 + nx * h, line.y1 + ny * h,
+        line.x1 - nx * h, line.y1 - ny * h,
+        line.x2 + nx * h, line.y2 + ny * h,
+        line.x2 + nx * h, line.y2 + ny * h,
+        line.x1 - nx * h, line.y1 - ny * h,
+        line.x2 - nx * h, line.y2 - ny * h,
+    ]);
+    const buffer = gl.createBuffer();
+    if (!buffer)
+        return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(0);
+    const program = gl.getParameter(gl.CURRENT_PROGRAM);
+    const colorLocation = gl.getUniformLocation(program, "u_color");
+    if (colorLocation)
+        gl.uniform4fv(colorLocation, line.color);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.deleteBuffer(buffer);
+}
+/* Module Entrypoint */
+function turtle(symbols, gl) {
+    let stack = [];
+    let cursor = {
+        x_position: 0,
+        y_position: 0,
+        direction: 0
+    };
+    for (const symbol of symbols) {
+        const line = forth(symbol, stack, cursor);
+        /* Use type guards for other primitives */
+        if (line) {
+            drawLine(gl, line);
+        }
+    }
+}
+/* End of Turtle Module */
+function lindenmayer(symbols, substitutions, generations) {
+    let current_generation = structuredClone(symbols);
+    for (let i = 1; i <= generations; i++) {
+        let new_generation = [];
+        current_generation.forEach(symbol => {
+            var _a;
+            return new_generation.push(...((_a = substitutions.get(symbol)) !== null && _a !== void 0 ? _a : [symbol]));
+        });
+        current_generation = new_generation;
+    }
+    return current_generation;
+}
+function resizeCanvas(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
+    if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+    }
+}
+function render() {
+    const axiomInput = document.getElementById("axiom");
+    const rulesInput = document.getElementById("rules");
+    const instructionsInput = document.getElementById("instructions");
+    const generationsInput = document.getElementById("generations");
+    const canvas = document.getElementById("plot");
+    resizeCanvas(canvas);
+    const xTranslationInput = document.getElementById("xTranslation");
+    const yTranslationInput = document.getElementById("yTranslation");
+    const zoomInput = document.getElementById("zoom");
+    const xTranslation = Number(xTranslationInput.value.trim());
+    const yTranslation = Number(yTranslationInput.value.trim());
+    const zoom = Number(zoomInput.value.trim());
+    const gl = canvas.getContext("webgl2");
+    if (!gl) {
+        return alert("WebGL2 not supported");
+    }
+    const axiom = axiomInput.value.trim().replace(/\s+/g, " ").split(" ");
+    const rulesText = rulesInput.value;
+    const rulesMap = new Map();
+    rulesText.split("\n").forEach((line) => {
+        const parts = line.split("=");
+        if (parts.length !== 2) {
+            return;
+        }
+        const key = parts[0].trim();
+        const value = parts[1].trim().replace(/\s+/g, " ").split(" ");
+        rulesMap.set(key, value);
+    });
+    const instructionMap = {};
+    instructionsInput.value.split("\n").forEach(line => {
+        const parts = line.split("=");
+        if (parts.length !== 2)
+            return;
+        const key = parts[0].trim();
+        const value = parts[1].trim();
+        instructionMap[key] = value;
+    });
+    const generations = Number(generationsInput.value);
+    const symbols = lindenmayer(axiom, rulesMap, generations);
+    const processedSymbols = [];
+    symbols.forEach(symbol => {
+        const replacement = instructionMap[symbol];
+        if (replacement) {
+            processedSymbols.push(...replacement.split(" "));
+        }
+        else {
+            processedSymbols.push(symbol);
+        }
+    });
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(1, 1, 1, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    const vertexSource = `#version 300 es
+        in vec2 a_position;
+        uniform vec2 u_resolution;
+        uniform vec2 u_pan;
+        uniform float u_zoom;
+
+        void main() {
+            vec2 pos = (a_position + u_pan) * u_zoom;
+
+            vec2 zeroToOne = pos / u_resolution;
+            vec2 zeroToTwo = zeroToOne * 2.0;
+            vec2 clipSpace = zeroToTwo - 1.0;
+            gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+        }
+    `;
+    const fragmentSource = `#version 300 es
+        precision mediump float;
+
+        uniform vec4 u_color;
+
+        out vec4 outColor;
+
+        void main() {
+            outColor = u_color;
+        }
+    `;
+    const program = gl.createProgram();
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, vertexSource);
+    gl.compileShader(vertexShader);
+    if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(vertexShader) || "WebGL| Vertex shader compilation failed.");
+    }
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, fragmentSource);
+    gl.compileShader(fragmentShader);
+    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(fragmentShader) || "WebGL| Fragment shader compilation failed.");
+    }
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program) || "WebGL| Program linking failed.");
+    }
+    gl.useProgram(program);
+    const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+    const panLocation = gl.getUniformLocation(program, "u_pan");
+    gl.uniform2f(panLocation, xTranslation, yTranslation);
+    const zoomLocation = gl.getUniformLocation(program, "u_zoom");
+    gl.uniform1f(zoomLocation, zoom);
+    turtle(processedSymbols, gl);
+}
+window.addEventListener('resize', render);

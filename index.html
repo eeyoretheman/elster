@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,34 +8,45 @@
 
   <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
   <header id="header">ELSTER</header>
 
   <main id="main">
     <form id="configuration">
-      <!--
-      <label for="turtleModule">Upload your own Turtle Module</label>
-      <input id="turtleModule" type="file">
-      -->
-
       <label for="axiom">Axiom:</label>
-      <input id="axiom" size="20" type="text" value="F--F--F">
+      <input id="axiom" size="20" type="text" value="F - - F - - F">
 
       <label for="rules">Rules:</label>
-      <textarea id="rules" cols="20">F = F+F--F+F</textarea>
+      <textarea id="rules" cols="20">
+F = F + F - - F + F
+      </textarea>
+
+      <label for="instructions">Instructions:</label>
+      <textarea id="instructions" cols="20">
+F = 1 FORWARD
++ = 60 ROTATE
+- = -60 ROTATE
+      </textarea>
 
       <label for="generations">Generations:</label>
       <input id="generations" type="number" value="5">
 
-      <label for="angle">Angle:</label>
-      <input id="angle" type="number" value="60.0">
+      <label for="xTranslation">X Translation:</label>
+      <input id="xTranslation" type="number" value="1850">
 
-      <button type="button" onclick="plot()">Plot</button>
+      <label for="yTranslation">Y Translation:</label>
+      <input id="yTranslation" type="number" value="2120">
+
+      <label for="zoom">Zoom:</label>
+      <input id="zoom" type="number" value="0.27">
+
+      <button type="button" onclick="render()">Render</button>
 
       <output id="output" for="axiom rules generations"></output>
     </form>
 
-    <canvas id="plot" width="800" height="600"></canvas>
+    <canvas id="plot" width="1000" height="1000"></canvas>
   </main>
 
   <footer id="footer">
@@ -45,4 +57,5 @@
 
   <script src="index.js"></script>
 </body>
+
 </html>
