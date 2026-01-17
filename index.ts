@@ -287,7 +287,6 @@ function render() {
     const zoomLocation = gl.getUniformLocation(program, "u_zoom")
     gl.uniform1f(zoomLocation, zoom)
 
-
     turtle(processedSymbols, gl)
 }
 
