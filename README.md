@@ -3,7 +3,9 @@ An L-system plotter for folks who like pretty pictures.
 
 ⚠️ Very Early stage of development ⚠️
 
-![A pretty Koch snowflake](screenshot.png)
+![A pretty Koch Snowflake](images/koch_snowflake.png)
+
+![A Dragon Curve](images/dragon_curve.png)
 
 ## FAQ
 
