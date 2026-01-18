@@ -1,6 +1,8 @@
 # elster
 An L-system plotter for folks who like pretty pictures.
 
+Try it out: https://eeyoretheman.github.io/elster/
+
 ⚠️ Very Early stage of development ⚠️
 
 ![A pretty Koch Snowflake](images/koch_snowflake.png)
